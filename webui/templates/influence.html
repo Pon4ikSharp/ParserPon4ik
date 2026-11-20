@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Інфовплив{% endblock %}
+{% block body_class %}influence-cyber{% endblock %}
+{% block heading %}Інфовплив{% endblock %}
+{% block subheading %}Curated semantic: напрям → наратив → теза → Story → поширення{% endblock %}
+{% block content %}
+<div class="influence-v4">
+<section class="dash-card inf-toolbar-v4">
+  <div class="inf-toolbar-head-v4">
+    <div class="inf-gold-state-v4"><span></span><div><strong>Curated gold-layer</strong><small>{{ run.version or 'curated' }} · {{ run.status or '—' }}</small></div></div>
+    <div class="inf-baseline-v4">
+      <span><b>{{ baseline.included }}</b> включено</span><span><b>{{ baseline.excluded }}</b> відсіяно</span>
+      <span><b>{{ baseline.review }}</b> на перевірці</span><span><b>{{ baseline.uncurated }}</b> без обробки</span>
+    </div>
+  </div>
+  <form method="get" class="inf-filter-row-v4">
+    <div class="field"><label>Період</label><select name="period">
+      <option value="all" {% if period=='all' %}selected{% endif %}>Від 21.09.2026</option>
+      <option value="day" {% if period=='day' %}selected{% endif %}>24 години</option>
+      <option value="48h" {% if period=='48h' %}selected{% endif %}>48 годин</option>
+      <option value="week" {% if period=='week' %}selected{% endif %}>7 днів</option>
+      <option value="custom" {% if period=='custom' %}selected{% endif %}>Власний</option>
+    </select></div>
+    <div class="field"><label>Напрям</label><select name="direction"><option value="">Усі напрями</option>{% for row in available_directions %}<option value="{{ row.direction_key }}" {% if direction==row.direction_key %}selected{% endif %}>{{ row.label }}</option>{% endfor %}</select></div>
+    <div class="field"><label>Наратив</label><select name="narrative"><option value="">Усі наративи</option>{% for row in available_narratives %}<option value="{{ row.narrative_key }}" {% if narrative==row.narrative_key %}selected{% endif %}>{{ row.label }}</option>{% endfor %}</select></div>
+    <div class="field"><label>Цільова аудиторія</label><select name="audience"><option value="">Усі ЦА</option>{% for value in available_audiences %}<option value="{{ value }}" {% if audience==value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></div>
+    <div class="field"><label>Спікер</label><select name="speaker"><option value="">Усі спікери</option>{% for value in available_speakers %}<option value="{{ value }}" {% if speaker==value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></div>
+    <div class="inf-filter-actions-v4"><button class="btn btn-primary" type="submit">Застосувати</button><a class="btn" href="/influence">Скинути</a></div>
+    {% if period=='custom' %}
+    <div class="field inf-date-v4"><label>Від</label><input type="date" name="date_from" value="{{ date_from }}"></div>
+    <div class="field inf-date-v4"><label>До</label><input type="date" name="date_to" value="{{ date_to }}"></div>
+    {% endif %}
+  </form>
+  <div class="inf-context-v4">
+    <span>Покриття: <b>{{ coverage.first_seen_label }}</b> → <b>{{ coverage.last_seen_label }}</b></span>
+    {% if selected_direction %}<span>Напрям: <b>{{ selected_direction }}</b></span>{% endif %}
+    {% if selected_narrative %}<span>Наратив: <b>{{ selected_narrative }}</b></span>{% endif %}
+    <span>Валідація: <b>{{ run.period_end_label }}</b></span>
+  </div>
+</section>
+
+<section class="inf-freshness-v6 {{ 'stale' if freshness.stale else 'current' }}">
+  <div class="inf-freshness-icon-v6">{{ '!' if freshness.stale else '✓' }}</div>
+  <div class="inf-freshness-main-v6">
+    <strong>{% if freshness.stale %}Gold-layer потребує синхронізації{% else %}Gold-layer актуальний{% endif %}</strong>
+    <small>Raw Grok до <b>{{ freshness.raw_last_seen_label }}</b> · curated до <b>{{ freshness.curated_last_seen_label }}</b></small>
+  </div>
+  <div class="inf-freshness-stats-v6">
+    <span><b>{{ freshness.uncurated_ai_scope }}</b> нових Story без курації від 28.09</span>
+    <span><b>{{ freshness.uncurated_total }}</b> без курації у всьому scope</span>
+    {% if freshness.lag_hours is not none %}<span><b>{{ freshness.lag_hours }}</b> год розрив</span>{% endif %}
+  </div>
+</section>
+
+<section class="inf-kpi-grid-v4">
+  <div><span>Напрями</span><strong>{{ metrics.directions }}</strong></div>
+  <div><span>Наративи</span><strong>{{ metrics.narratives }}</strong></div>
+  <div><span>Тези</span><strong>{{ metrics.theses }}</strong></div>
+  <div><span>Story</span><strong>{{ metrics.stories }}</strong></div>
+</section>
+<div class="inf-flow-strip-v4"><span>{{ metrics.documents }} документів</span><span>{{ metrics.sources }} джерел</span><span>{{ metrics.duplicates }} тиражувань</span><span>{{ metrics.developments }} змістових доповнень</span><span>{{ metrics.links }} Story→Thesis зв’язків</span>{% if trend.available %}<span class="inf-trend-summary-v5"><b>Динаміка:</b> <strong class="trend-{{ trend.status }}">{% if trend.status=='up' %}&uarr;{% elif trend.status=='down' %}&darr;{% else %}&rarr;{% endif %} {{ trend.label }}</strong> <small>{{ trend.current }} проти {{ trend.previous }} публ.</small></span>{% endif %}</div>
+<section class="dash-card inf-directions-v4">
+  <div class="dash-card-head"><div><span class="section-icon">◎</span><h2>Напрями інформаційного впливу</h2></div><span class="soft-label">curated · {{ directions|length }} у зрізі</span></div>{% if trend.available %}<div class="inf-trend-note-v5">Динаміка за кількістю публікацій: <b>{{ trend.current_label }}</b> порівнюється з <b>{{ trend.previous_label }}</b>.</div>{% endif %}
+  <div class="table-wrap inf-direction-table-wrap-v4"><table class="inf-direction-table-v4">
+    <thead><tr><th>Напрям</th><th>Наративи</th><th>Тези</th><th>Story</th><th>Док.</th><th>Джерела</th><th>Динаміка</th><th>Остання поява</th></tr></thead>
+    <tbody>{% for row in directions %}<tr class="{% if row.selected %}selected{% endif %}">
+      <td><a href="{{ row.filter_url }}"><strong>{{ row.label }}</strong></a><small>{{ row.description }}</small></td>
+      <td>{{ row.narratives }}</td><td>{{ row.theses }}</td><td><b>{{ row.stories }}</b></td><td>{{ row.documents }}</td><td>{{ row.sources }}</td><td class="nowrap"><span class="inf-trend-badge-v5 trend-{{ row.trend.status }}" title="Порівняння з попереднім днем за однаковий часовий інтервал">{% if row.trend.status=='up' %}&uarr;{% elif row.trend.status=='down' %}&darr;{% else %}&rarr;{% endif %} {{ row.trend.label }}</span></td><td class="nowrap">{{ row.last_seen_label }}</td>
+    </tr>{% else %}<tr><td colspan="8" class="empty">У вибраному зрізі немає напрямів</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+
+<section class="dash-card inf-semantic-v4">
+  <div class="dash-card-head"><div><span class="section-icon">≡</span><h2>Наративи та тези</h2></div><span class="soft-label">Direction → Narrative → Thesis</span></div>
+  <p class="card-subtitle">Розкрий потрібний напрям. Нова Story не створює автоматично нову тезу або наратив.</p>
+  <div class="inf-semantic-list-v4">
+    {% for row in hierarchy %}
+    <details class="inf-direction-detail-v4" {% if row.selected %}open{% endif %}>
+      <summary><span><strong>{{ row.label }}</strong><small>{{ row.description }}</small></span><b>{{ row.narratives|length }} наративів</b></summary>
+      <div class="inf-narratives-v4">
+        {% for narr in row.narratives %}
+        <details class="inf-narrative-detail-v4" {% if narr.selected %}open{% endif %}>
+          <summary><span><a href="{{ narr.filter_url }}">{{ narr.label }}</a><small>{{ narr.description }}</small></span><b>{{ narr.theses|length }} тез</b></summary>
+          <div class="inf-theses-v4">
+            {% for thesis in narr.theses %}
+            <div class="inf-thesis-row-v4">
+              <div><strong>{{ thesis.label }}</strong>{% if thesis.statement and thesis.statement != thesis.label %}<p>{{ thesis.statement }}</p>{% endif %}{% if thesis.expected_effect %}<small><b>Очікуваний ефект:</b> {{ thesis.expected_effect }}</small>{% endif %}</div>
+              <span><b>{{ thesis.stories }}</b> Story</span><span><b>{{ thesis.documents }}</b> док.</span><span><b>{{ thesis.sources }}</b> джерел</span>
+            </div>
+            {% endfor %}
+          </div>
+          {% if narr.function %}<div class="inf-narrative-function-v4"><b>Аналітична функція:</b> {{ narr.function }}</div>{% endif %}
+          {% if narr.audiences %}<div class="inf-audience-pills-v4">{% for value in narr.audiences %}<span>{{ value }}</span>{% endfor %}</div>{% endif %}
+        </details>
+        {% endfor %}
+      </div>
+    </details>
+    {% else %}<div class="empty">У вибраному зрізі немає curated семантики</div>{% endfor %}
+  </div>
+</section>
+
+<section class="dash-card inf-stories-v4" id="spread">
+  <div class="dash-card-head"><div><span class="section-icon">▤</span><h2>Story та поширення</h2></div><span class="soft-label">останні {{ stories|length }} у зрізі</span></div>
+  <div class="table-wrap inf-story-table-wrap-v4"><table class="inf-story-table-v4">
+    <thead><tr><th>Story</th><th>Семантика</th><th>Поширення</th><th>ЦА</th><th>Остання поява</th><th></th></tr></thead>
+    <tbody>{% for row in stories %}<tr>
+      <td class="inf-story-title-v4"><span class="inf-story-direction-v4">{{ row.direction_label or 'Без напряму' }}</span><strong>{{ row.title }}</strong>{% if row.summary %}<small>{{ row.summary }}</small>{% endif %}{% if row.speakers %}<em>Спікер: {{ row.speakers }}</em>{% endif %}</td>
+      <td><strong>{{ row.narrative_label or '—' }}</strong><small>{{ row.thesis_label or '—' }}</small></td>
+      <td class="inf-story-spread-v4"><span><b>{{ row.sources }}</b> джерел</span><span><b>{{ row.duplicates }}</b> тираж.</span><span><b>{{ row.developments }}</b> доп.</span>
+        <details><summary>деталі</summary><div><b>Поширення</b><p>{{ row.propagation_note or 'Окрема нотатка ще не сформована.' }}</p><b>Хронологія</b><p>{{ row.chronology_note or 'Окрема нотатка ще не сформована.' }}</p></div></details>
+      </td>
+      <td><div class="inf-audience-pills-v4 compact">{% for value in row.audience_context %}<span>{{ value }}</span>{% else %}<span>—</span>{% endfor %}</div></td>
+      <td class="nowrap">{{ row.last_seen_label }}</td>
+      <td class="nowrap"><a class="btn btn-small" href="/originals/{{ row.canonical_document_id }}">Матеріал</a></td>
+    </tr>{% else %}<tr><td colspan="6" class="empty">У вибраному зрізі немає Story</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+
+<div class="inf-bottom-grid-v4">
+  <section class="dash-card"><div class="dash-card-head"><div><span class="section-icon">◉</span><h2>Цільові аудиторії</h2></div></div><div class="inf-simple-list-v4">{% for row in audiences %}<div><span>{{ row.value }}</span><b>{{ row.stories }}</b></div>{% else %}<div class="empty">Не визначено</div>{% endfor %}</div></section>
+  <section class="dash-card"><div class="dash-card-head"><div><span class="section-icon">⌁</span><h2>Ролі джерел</h2></div></div><div class="inf-simple-list-v4">{% for row in source_roles %}<div><span>{{ row.label }}</span><b>{{ row.documents }}</b></div>{% else %}<div class="empty">Немає даних</div>{% endfor %}</div></section>
+  <section class="dash-card"><div class="dash-card-head"><div><span class="section-icon">↗</span><h2>Ретранслятори</h2></div></div><div class="inf-simple-list-v4">{% for row in relay_sources %}<div><span>{{ row.source_title }}</span><b>{{ row.documents }}</b></div>{% else %}<div class="empty">Немає даних</div>{% endfor %}</div></section>
+  <section class="dash-card"><div class="dash-card-head"><div><span class="section-icon">◌</span><h2>Спікери</h2></div></div><div class="inf-simple-list-v4">{% for row in speakers %}<div><span>{{ row.speaker }}</span><b>{{ row.documents }}</b></div>{% else %}<div class="empty">Немає даних</div>{% endfor %}</div></section>
+</div>
+{% if excluded %}
+<details class="dash-card inf-excluded-v4"><summary>Відсіяно з gold-layer <span>{{ baseline.excluded }}</span></summary><div class="inf-excluded-list-v4">{% for row in excluded %}<div><span><strong>{{ row.title }}</strong><small>{{ row.exclusion_reason }}</small></span><a href="/originals/{{ row.canonical_document_id }}">{{ row.first_seen_label }}</a></div>{% endfor %}</div></details>
+{% endif %}
+<section class="inf-audit-v4"><span></span><strong>Gold-layer валідований</strong><small>{{ baseline.included + baseline.excluded + baseline.review }} Story у scope · {{ baseline.review }} review · {{ baseline.uncurated }} без обробки. Raw Grok semantic збережений окремо для аудиту.</small></section>
+</div>
+{% endblock %}

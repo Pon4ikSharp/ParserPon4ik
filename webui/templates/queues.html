@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Черги{% endblock %}
+{% block heading %}Черги обробки{% endblock %}
+{% block subheading %}Тут показано лише те, що ще не завершено{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head"><div><h2>Поточна черга</h2><div class="muted">Один узгоджений підрахунок без статистики за період</div></div></div>
+  <div class="grid metrics">
+    <div class="metric"><span>Оригіналів очікує збирача</span><strong>{{ collector_counts.collector_pending }}</strong><small>у тому числі повторів після помилки: {{ collector_counts.collector_retries }}</small></div>
+    <div class="metric"><span>Чернеток очікує редактора</span><strong>{{ note_pending_total }}</strong><small>у таблиці нижче показано до 100 записів</small></div>
+  </div>
+  {% if collector_attention %}<h3>Потребують уваги після {{ collector_max_attempts }} спроб</h3><div class="table-wrap"><table><thead><tr><th>Оригінал</th><th>Джерело</th><th>Помилка</th><th>Дія</th></tr></thead><tbody>{% for row in collector_attention %}<tr><td><a href="/originals/{{ row.id }}">#{{ row.id }}</a><div class="muted">{{ row.published_at|localtime }}</div></td><td>{{ row.source_title }}</td><td>{% if row.br_status=='error' and row.br_attempts>=collector_max_attempts %}<div><strong>БР:</strong> {{ row.br_last_error }}</div>{% endif %}{% if row.info_status=='error' and row.info_attempts>=collector_max_attempts %}<div><strong>Інфовплив:</strong> {{ row.info_last_error }}</div>{% endif %}</td><td><div class="actions">{% if row.br_status=='error' and row.br_attempts>=collector_max_attempts %}<button class="btn btn-small" data-action="/api/queue/collector/{{ row.id }}/br/requeue">Повторити БР</button>{% endif %}{% if row.info_status=='error' and row.info_attempts>=collector_max_attempts %}<button class="btn btn-small" data-action="/api/queue/collector/{{ row.id }}/info/requeue">Повторити інфовплив</button>{% endif %}</div></td></tr>{% endfor %}</tbody></table></div>{% endif %}
+</section>
+<section class="panel">
+  <div class="panel-head">
+    <div><h2>Чернетки заміток</h2><div class="muted">Обробляє редактор</div></div>
+    <button class="btn btn-primary" data-action="/api/queue/notes/requeue-manual" data-confirm="Повернути всі записи manual_review у чергу редактора?" data-success="Усі відкладені замітки повернуто в обробку">Обробити всі manual_review</button>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>ID / стан</th><th>Джерело</th><th>Оригінал</th><th>Спроби</th><th>Дії</th></tr></thead>
+    <tbody>{% for row in notes %}
+      <tr>
+        <td><strong>#{{ row.id }}</strong><br><span class="badge {% if row.status=='manual_review' %}badge-red{% elif row.status=='queued' %}badge-amber{% else %}badge-blue{% endif %}">{{ row.status }}</span></td>
+        <td>{{ row.source_title }}<div class="muted">{{ row.created_at|localtime }}</div></td>
+        <td class="clip"><a href="/originals/{{ row.source_document_id }}">{{ row.original_preview or 'Оригінал недоступний' }}</a>{% if row.error %}<div class="badge badge-red">{{ row.error }}</div>{% endif %}</td>
+        <td>{{ row.attempts }}</td>
+        <td><div class="actions"><button class="btn btn-small" data-action="/api/queue/notes/{{ row.id }}/requeue">Повторити</button><button class="btn btn-small btn-danger" data-action="/api/queue/notes/{{ row.id }}/reject" data-confirm="Відхилити цю чернетку?">Відхилити</button></div></td>
+      </tr>
+    {% else %}<tr><td colspan="5" class="empty">Незавершених чернеток немає</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+<section class="panel">
+  <div class="panel-head">
+    <div><h2>Кандидати календаря</h2><div class="muted">Перевіряє і доповнює аналітик</div></div>
+    <button class="btn btn-primary" data-action="/api/queue/events/requeue-manual" data-confirm="Передати аналітику всі проблемні події?" data-success="Проблемні події повернуто в обробку аналітика">Обробити всі помилки подій</button>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>ID / стан</th><th>Кандидат</th><th>Джерело</th><th>Спроби</th><th>Дії</th></tr></thead>
+    <tbody>{% for row in events %}
+      <tr>
+        <td><strong>#{{ row.id }}</strong><br><span class="badge {% if row.status in ['manual_review','failed'] %}badge-red{% elif row.status=='queued' %}badge-amber{% else %}badge-blue{% endif %}">{{ row.status }}</span></td>
+        <td class="title-cell">{{ row.candidate_text }}{% if row.error %}<div class="badge badge-red">{{ row.error }}</div>{% endif %}</td>
+        <td><a href="/originals/{{ row.source_document_id }}">{{ row.source_title or 'Оригінал' }}</a><div class="muted">{{ row.created_at|localtime }}</div></td>
+        <td>{{ row.attempts }}</td>
+        <td><div class="actions"><button class="btn btn-small" data-action="/api/queue/events/{{ row.id }}/requeue">Повторити</button><button class="btn btn-small btn-danger" data-action="/api/queue/events/{{ row.id }}/reject" data-confirm="Відхилити цю подію?">Відхилити</button></div></td>
+      </tr>
+    {% else %}<tr><td colspan="5" class="empty">Незавершених кандидатів календаря немає</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% endblock %}

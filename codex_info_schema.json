@@ -1,0 +1,98 @@
+{
+  "type": "object",
+  "properties": {
+    "relevant": {
+      "type": "boolean"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "carrier",
+        "amplifier",
+        "reporting",
+        "trigger",
+        "not_relevant"
+      ]
+    },
+    "narrative_title": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "target_entities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "techniques": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "strategic_objectives": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "audiences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "actors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "information_triggers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "future_relevance": {
+      "type": "string"
+    },
+    "confidence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "narrative_key": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "relevant",
+    "role",
+    "narrative_title",
+    "summary",
+    "target_entities",
+    "techniques",
+    "claims",
+    "strategic_objectives",
+    "audiences",
+    "actors",
+    "information_triggers",
+    "future_relevance",
+    "confidence",
+    "narrative_key",
+    "reason"
+  ],
+  "additionalProperties": false
+}

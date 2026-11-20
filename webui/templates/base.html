@@ -1,0 +1,64 @@
+﻿<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="ponchik-token" content="{{ action_token }}">
+  <title>{% block title %}Золотий пончик{% endblock %} — аналітична панель</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}?v=20260930-mobile2">
+  <script src="{{ url_for('static', path='app.js') }}?v=20260930-mobile2" defer></script>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+<div class="layout">
+  <aside class="sidebar" id="main-sidebar">
+    <a class="brand" href="/">
+      <div class="brand-mark brand-signal" aria-hidden="true">
+        <i></i><i></i><i></i><b></b>
+      </div>
+      <div><strong>Золотий пончик</strong><small>Моніторимо. Аналізуємо.<br>Розуміємо.</small></div>
+    </a>
+    <nav class="nav" aria-label="Основна навігація">
+      {% set nav=[
+        ('/','⌂','Панель'),
+        ('/originals','▤','Оригінали'),
+        ('/queues','☷','Черга аналізу'),
+        ('/influence','⌘','Інфовплив'),
+        ('/influence#spread','◉','Поширення'),
+        ('/sources','◍','Джерела'),
+        ('/#telegram-signals','➤','Telegram-сигнали'),
+        ('/models','⚙','Налаштування')
+      ] %}
+      {% for href,icon,label in nav %}
+      <a href="{{ href }}" class="{% if '#' not in href and (current_path==href or (href!='/' and current_path.startswith(href))) %}active{% endif %}">
+        <span class="nav-icon">{{ icon }}</span><span>{{ label }}</span>
+      </a>
+      {% endfor %}
+    </nav>
+    <div class="sidebar-foot">
+      <blockquote>“Більше контексту<br>менше шуму”</blockquote>
+      <small>ParserPon4ik · secure</small>
+    </div>
+  </aside>
+  <button class="mobile-scrim" type="button" data-mobile-scrim aria-label="Закрити меню"></button>
+  <main class="main">
+    <header class="topbar">
+      <div class="page-title">
+        <button class="btn mobile-menu" data-mobile-menu aria-label="Відкрити меню" aria-controls="main-sidebar" aria-expanded="false"><span aria-hidden="true">☰</span><span>Меню</span></button>
+        <h1>{% block heading %}Золотий пончик — аналітична панель{% endblock %}</h1>
+        <p>{% block subheading %}Моніторинг медіа та первинна обробка інформаційних сигналів{% endblock %}</p>
+      </div>
+      <div class="topbar-tools">
+        <form class="global-search" action="/search" method="get">
+          <span>⌕</span><input name="q" placeholder="Пошук за ключовими словами, джерелом або ID…" autocomplete="off">
+        </form>
+        <span class="collector-pill {% if not nav_parser.healthy %}collector-warning{% endif %}"><i></i>Збір: {{ 'працює' if nav_parser.healthy else ('запускається' if nav_parser.running else 'зупинений') }}</span>
+        <div class="operator"><span class="operator-avatar">ОП</span><div><strong>Оператор</strong><small>Захищена сесія</small></div></div>
+        <a class="logout-link" href="/logout" title="Вийти">↗</a>
+      </div>
+    </header>
+    {% block content %}{% endblock %}
+  </main>
+</div>
+</body>
+</html>
+

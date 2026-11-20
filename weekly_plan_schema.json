@@ -1,0 +1,204 @@
+{
+  "type": "object",
+  "properties": {
+    "main_sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "heading": {
+            "type": "string",
+            "enum": [
+              "виправдання збройної агресії проти України.",
+              "перешкоджання зовнішній військовій та фінансовій підтримці України.",
+              "дестабілізація соціально-політичної обстановки в нашій державі.",
+              "дискредитація Сил оборони України."
+            ]
+          },
+          "strategic_objective": {
+            "type": "string",
+            "enum": [
+              "виправдання агресії",
+              "перешкоджання підтримці України",
+              "дестабілізація в Україні",
+              "дискредитація СОУ"
+            ]
+          },
+          "why_selected": {
+            "type": "string"
+          },
+          "development": {
+            "type": "string"
+          },
+          "audience_adaptation": {
+            "type": "string"
+          },
+          "subsections": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "heading": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                },
+                "development": {
+                  "type": "string"
+                },
+                "audience_adaptation": {
+                  "type": "string"
+                },
+                "evidence_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "heading",
+                "reason",
+                "development",
+                "audience_adaptation",
+                "evidence_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "heading",
+          "strategic_objective",
+          "why_selected",
+          "development",
+          "audience_adaptation",
+          "subsections",
+          "evidence_refs"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "special_sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "heading": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "heading",
+          "reason",
+          "evidence_refs"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "event": {
+            "type": "string"
+          },
+          "influence_link": {
+            "type": "string"
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "date",
+          "event",
+          "influence_link",
+          "evidence_refs"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "research_queries": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "negative_findings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "manual_coverage_audit": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string"
+          },
+          "source_files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "disposition": {
+            "type": "string",
+            "enum": [
+              "main_section",
+              "subsection",
+              "special_section",
+              "negative_finding",
+              "omit"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "topic",
+          "source_files",
+          "disposition",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "main_sections",
+    "special_sections",
+    "events",
+    "research_queries",
+    "negative_findings",
+    "manual_coverage_audit"
+  ],
+  "additionalProperties": false
+}

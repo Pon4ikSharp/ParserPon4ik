@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+{% block title %}Панель{% endblock %}
+{% block body_class %}dashboard-cyber{% endblock %}
+{% block heading %}Золотий пончик — оперативна панель{% endblock %}
+{% block subheading %}Свіжі матеріали, активні сюжети та стан попередньої обробки{% endblock %}
+{% block content %}
+<div class="dashboard-v3">
+
+  <section class="cyber-kpis">
+    {% set cards=[
+      ('MUST_ANALYZE','Обов’язково аналізувати','Критично важливі','critical'),
+      ('ANALYZE','На аналіз','Сильні кандидати','primary'),
+      ('HOLD','Очікує сигналів','Потрібен додатковий сигнал','warning'),
+      ('DROP_SOFT','Відсіяно','Низька релевантність','muted')
+    ] %}
+    {% for key,label,caption,tone in cards %}
+    <a class="cyber-kpi {{ tone }}" href="/originals?route={{ key }}">
+      <span class="cyber-kpi-glow"></span>
+      <div class="cyber-kpi-label">{{ label }}</div>
+      <strong>{{ "{:,}".format(modern.routes[key]).replace(",", " ") }}</strong>
+      <small>{{ caption }} · за 24 години</small>
+    </a>
+    {% endfor %}
+  </section>
+
+  <section class="cyber-panel ai-ops-panel">
+    <header class="cyber-panel-head ai-ops-head">
+      <div><span class="eyebrow">ШІ-ОБРОБКА</span><h2>Grok · актуальний цикл</h2></div>
+      <span class="ai-state {{ 'ok' if modern.ai.pending < 100 else 'warn' }}">{{ modern.ai.pending }} у черзі</span>
+    </header>
+    <div class="ai-ops-grid">
+      <div class="ai-metric hero"><span>Оброблено через ШІ</span><strong>{{ "{:,}".format(modern.ai.processed).replace(",", " ") }}</strong><small>{{ modern.ai.scope_label }}</small></div>
+      <div class="ai-metric pending"><span>Не оброблено</span><strong>{{ modern.ai.pending }}</strong><small>{{ modern.ai.pending_must }} MUST · {{ modern.ai.pending_analyze }} ANALYZE</small></div>
+      <div class="ai-metric"><span>KEEP</span><strong>{{ modern.ai.keep }}</strong></div>
+      <div class="ai-metric"><span>CONTEXT</span><strong>{{ modern.ai.context }}</strong></div>
+      <div class="ai-metric"><span>REVIEW</span><strong>{{ modern.ai.review }}</strong></div>
+      <div class="ai-metric"><span>DROP</span><strong>{{ modern.ai.drop }}</strong></div>
+    </div>
+    <div class="ai-progress-row"><div><span>Закриття черги</span><b>{{ modern.ai.completion_percent }}%</b></div><div class="ai-progress"><i style="width:{{ modern.ai.completion_percent }}%"></i></div></div>
+    <div class="ai-last">Остання успішна обробка: <b>{{ modern.ai.last_processed_at|localtime }}</b></div>
+  </section>
+
+  <section class="cyber-primary-grid">
+    <article class="cyber-panel important-panel">
+      <header class="cyber-panel-head">
+        <div>
+          <span class="eyebrow">ОПЕРАТИВНО</span>
+          <h2>Нові важливі матеріали</h2>
+        </div>
+        <a href="/originals?processing_status=processed">Усі матеріали →</a>
+      </header>
+
+      <div class="important-list">
+        {% for row in modern.important %}
+        <a class="important-row" href="/originals/{{ row.id }}">
+          <span class="route-indicator {{ 'must' if row.route=='MUST_ANALYZE' else 'analyze' }}"></span>
+          <div class="important-main">
+            <div class="important-meta">
+              <span>{{ row.source_title or 'Без назви' }}</span>
+              <time>{{ (row.published_at or row.created_at)|localtime }}</time>
+            </div>
+            <strong>{{ row.preview or 'Без тексту' }}</strong>
+          </div>
+          <span class="uk-route {{ 'must' if row.route=='MUST_ANALYZE' else 'analyze' }}">
+            {{ modern.route_labels[row.route] }}
+          </span>
+        </a>
+        {% else %}
+        <div class="cyber-empty">Нових важливих матеріалів за 24 години немає.</div>
+        {% endfor %}
+      </div>
+    </article>
+
+    <article class="cyber-panel stories-panel">
+      <header class="cyber-panel-head">
+        <div>
+          <span class="eyebrow">ПОШИРЕННЯ</span>
+          <h2>Активні сюжети</h2>
+        </div>
+        <a href="/influence">Усі сюжети →</a>
+      </header>
+
+      {% if modern.story_graph and modern.story_graph.origin %}
+      <div class="story-graph-card">
+        <div class="story-graph-title">
+          <div class="story-top">
+            <span class="uk-route compact {{ 'must' if modern.story_graph.route=='MUST_ANALYZE' else 'analyze' }}">{{ modern.route_labels[modern.story_graph.route] }}</span>
+            <time>{{ modern.story_graph.last_seen_at|localtime }}</time>
+          </div>
+          <a href="/originals/{{ modern.story_graph.canonical_document_id }}">{{ modern.story_graph.preview or modern.story_graph.source_title }}</a>
+          <div class="story-metrics hero-metrics">
+            <span><b>{{ modern.story_graph.unique_sources }}</b> джерел</span>
+            <span><b>{{ modern.story_graph.spread_count }}</b> повторів</span>
+            <span><b>{{ modern.story_graph.unique_domains }}</b> доменів</span>
+            <span><b>{{ modern.story_graph.unique_telegram_channels }}</b> каналів Telegram</span>
+          </div>
+        </div>
+
+        <div class="story-network">
+          <svg class="story-network-edges" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            {% for member in modern.story_graph.members %}
+            <line class="story-edge {{ member.match_type }} {% if member.is_signal %}signal{% endif %}"
+                  x1="18" y1="50" x2="{{ member.x }}" y2="{{ member.y }}"></line>
+            {% endfor %}
+          </svg>
+
+          <a class="graph-node origin {{ modern.story_graph.origin.source_kind|lower }}"
+             href="/originals/{{ modern.story_graph.origin.id }}"
+             style="left:18%;top:50%"
+             title="Оригінал · {{ modern.story_graph.origin.kind_label }}">
+            <span class="graph-node-dot"></span>
+            <span class="graph-node-label"><b>Оригінал</b>{{ modern.story_graph.origin.source_title }}</span>
+          </a>
+
+          {% for member in modern.story_graph.members %}
+          <a class="graph-node follower {{ member.source_kind|lower }} {% if member.is_signal %}signal{% endif %} {% if member.x >= 80 %}right-edge{% endif %}"
+             href="/originals/{{ member.id }}"
+             style="left:{{ member.x }}%;top:{{ member.y }}%"
+             title="{{ member.source_title }} · {{ member.match_label }} · {{ member.kind_label }}">
+            <span class="graph-node-dot"></span>
+            <span class="graph-node-label"><b>{{ member.kind_label }}</b>{{ member.source_title }}</span>
+          </a>
+          {% endfor %}
+
+          {% if modern.story_graph.hidden_members > 0 %}
+          <span class="graph-more">+{{ modern.story_graph.hidden_members }}</span>
+          {% endif %}
+        </div>
+
+        <div class="story-graph-footer">
+          <span><b>{{ modern.story_graph.duration_label }}</b> від першої до останньої появи</span>
+          <span class="edge-legend"><i class="exact"></i>точний повтор</span>
+          <span class="edge-legend"><i class="near"></i>схожий текст</span>
+        </div>
+      </div>
+
+      <div class="story-list compact-stories">
+        {% for story in modern.active_stories[1:] %}
+        <a class="story-row compact-story" href="/originals/{{ story.canonical_document_id }}">
+          <div class="compact-story-main">
+            <strong>{{ story.preview or story.source_title }}</strong>
+            <small>{{ story.unique_sources }} джерел · {{ story.spread_count }} повторів · {{ story.last_seen_at|localtime }}</small>
+          </div>
+          <span>→</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="cyber-empty">Активних релевантних сюжетів поки немає.</div>
+      {% endif %}
+    </article>
+  </section>
+  <section class="cyber-flow-grid">
+    <article class="cyber-panel sources-panel">
+      <header class="cyber-panel-head">
+        <div>
+          <span class="eyebrow">24 ГОДИНИ</span>
+          <h2>Першоджерела та мережі поширення</h2>
+        </div>
+        <a href="/sources">Усі джерела →</a>
+      </header>
+      <p class="panel-help">Першоджерела ранжуються окремо. Великі ретрансляційні мережі показуються нижче як канали поширення на відповідні ЦА.</p>
+      <div class="source-section-label">Першоджерела</div>
+      <div class="source-rank-list">
+        {% for source in modern.top_sources %}
+        <a class="source-rank-row" href="/originals?source={{ source.source_title|urlencode }}">
+          <div class="source-rank-top">
+            <strong>{{ loop.index }}. {{ source.source_title }}</strong>
+            <b>{{ source.total }}</b>
+          </div>
+          <div class="source-rank-bar"><span style="width:{{ source.bar_percent }}%"></span></div>
+          <div class="source-rank-meta">
+            <span class="must-dot"></span><span>{{ source.must_count }} обов’язково</span>
+            <span class="analyze-dot"></span><span>{{ source.analyze_count }} на аналіз</span>
+          </div>
+        </a>
+        {% else %}
+        <div class="cyber-empty">За останні 24 години важливих джерел не знайдено.</div>
+        {% endfor %}
+      </div>
+
+      {% if modern.relay_network.total %}
+      <div class="relay-network-block">
+        <div class="source-section-label">Мережі поширення</div>
+        <div class="relay-network-card">
+          <div class="relay-network-head">
+            <div>
+              <strong>{{ modern.relay_network.name }}</strong>
+              <small>багатомовна мережа ретрансляції · Іноземна ЦА</small>
+            </div>
+            <b>{{ modern.relay_network.total }}</b>
+          </div>
+          <div class="relay-network-stats">
+            <span><i class="must"></i>{{ modern.relay_network.must_count }} обов’язково</span>
+            <span><i class="analyze"></i>{{ modern.relay_network.analyze_count }} на аналіз</span>
+            <span><i class="hold"></i>{{ modern.relay_network.hold_count }} очікує</span>
+          </div>
+          <div class="relay-node-list">
+            {% for node in modern.relay_network.nodes[:6] %}
+            <a href="/originals?source={{ node.source_title|urlencode }}">
+              <span>{{ node.source_title }}</span>
+              <b>{{ node.total }}</b>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </article>
+
+    <article class="cyber-panel attention-panel">
+      <header class="cyber-panel-head">
+        <div>
+          <span class="eyebrow">КОНТРОЛЬ</span>
+          <h2>Потребує уваги</h2>
+        </div>
+      </header>
+      <div class="attention-list">
+        {% for item in modern.attention %}
+        <a class="attention-item {{ item.tone }}" href="{{ item.href }}">
+          <span class="attention-dot"></span>
+          <div><strong>{{ item.title }}</strong><small>{{ item.detail }}</small></div>
+          <span class="attention-arrow">→</span>
+        </a>
+        {% endfor %}
+      </div>
+    </article>
+  </section>
+
+  <section class="cyber-bottom-grid">
+    <article class="cyber-panel telegram-panel" id="telegram-signals">
+      <header class="cyber-panel-head">
+        <div>
+          <span class="eyebrow">СИГНАЛИ</span>
+          <h2>Сигнали Telegram</h2>
+        </div>
+        <a href="/search?direction=info">Пошук повідомлень →</a>
+      </header>
+      <p class="panel-help">Натисни на тег, щоб побачити всі матеріали, де він зустрічається.</p>
+      <div class="cyber-tags">
+        {% for item in modern.telegram_terms %}
+        <a class="cyber-tag {% if item.promoted %}promoted{% endif %}" href="/originals?q={{ item.term|urlencode }}">
+          <span>{{ item.term }}</span>
+          <b>{{ item.count_24h or 0 }}</b>
+          <small>24 год{% if item.count_7d %} · {{ item.count_7d }} за 7 днів{% endif %}</small>
+        </a>
+        {% else %}
+        <div class="cyber-empty">Активних тегів немає.</div>
+        {% endfor %}
+      </div>
+    </article>
+
+    <article class="cyber-panel system-panel">
+      <header class="cyber-panel-head">
+        <div>
+          <span class="eyebrow">СТАН СИСТЕМИ</span>
+          <h2>Обробка</h2>
+        </div>
+      </header>
+      <div class="system-v3">
+        <div class="system-v3-row">
+          <span class="system-v3-icon {{ 'ok' if parser.healthy else 'warn' }}"></span>
+          <div><strong>Збір матеріалів</strong><small>{{ 'Працює нормально' if parser.healthy else 'Потребує перевірки' }}</small></div>
+          <b>{{ 'Працює' if parser.healthy else 'Увага' }}</b>
+        </div>
+        <div class="system-v3-row">
+          <span class="system-v3-icon ok"></span>
+          <div><strong>Попередня обробка</strong><small>Швидкий прохід щохвилини</small></div>
+          <b>&lt; 1 хв</b>
+        </div>
+        <div class="system-v3-row">
+          <span class="system-v3-icon {{ 'ok' if modern.heavy_backlog < 100 else 'warn' }}"></span>
+          <div><strong>Поширення та дублікати</strong><small>Фонова черга не блокує статус матеріалу</small></div>
+          <b>{{ modern.heavy_backlog }}</b>
+        </div>
+      </div>
+    </article>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}Матеріал #{{ item.id }}{% endblock %}
+{% block heading %}Матеріал #{{ item.id }}{% endblock %}
+{% block subheading %}{{ item.source_title }} · {{ item.published_at|localtime }}{% endblock %}
+
+{% block content %}
+<div class="detail-grid">
+  <section>
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Оригінальний текст</h2>
+        <div class="actions">
+          <button class="btn btn-primary" data-translate-document="{{ item.id }}" {% if translation and translation.status in ['queued','processing'] %}disabled{% endif %}>
+            {% if translation and translation.status in ['queued','processing'] %}
+              Перекладається…
+            {% elif translation and translation.status=='completed' %}
+              Перекласти знову
+            {% else %}
+              Перекласти українською
+            {% endif %}
+          </button>
+          {% if item.source_url %}
+          <a class="btn" href="{{ item.source_url }}" target="_blank" rel="noreferrer">Відкрити джерело</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="document">{{ item.full_text or item.source_text }}</div>
+      {% if item.feed_text and item.feed_text != item.source_text %}
+      <details>
+        <summary>Початковий RSS-текст</summary>
+        <div class="document">{{ item.feed_text }}</div>
+      </details>
+      {% endif %}
+    </section>
+
+    <section class="panel" data-translation-panel data-document-id="{{ item.id }}" {% if not translation %}hidden{% endif %}>
+      <div class="panel-head">
+        <h2>Переклад українською</h2>
+        <span class="badge {% if translation and translation.status=='completed' %}badge-green{% elif translation and translation.status=='failed' %}badge-red{% else %}badge-amber{% endif %}" data-translation-status>
+          {{ translation.status if translation else '' }}
+        </span>
+      </div>
+      <div class="muted" data-translation-error>{% if translation and translation.error %}{{ translation.error }}{% endif %}</div>
+      <div class="document" data-translation-text {% if not translation or translation.status!='completed' %}hidden{% endif %}>{{ translation.translated_text if translation else '' }}</div>
+    </section>
+
+    {% if telegram_markers %}
+    <section class="panel">
+      <div class="panel-head"><h2>Telegram · маркери поста</h2><span class="badge">{{ telegram_markers|length }}</span></div>
+      <div class="actions">
+        {% for marker in telegram_markers %}<span class="badge" title="{{ marker.marker_type }}">{% if marker.marker_type=='hashtag' %}{{ marker.marker }}{% else %}ярлик: {{ marker.marker }}{% endif %}</span>{% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% if spread_members and spread_members|length > 1 %}
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Поширення / тиражування</h2>
+        <span class="badge">{{ spread_members|length }} публікацій</span>
+      </div>
+      <div class="search-list">
+        {% for copy in spread_members %}
+        <article class="search-item">
+          <div class="meta">
+            <div>{{ copy.published_at|localtime }}</div>
+            <div>{{ copy.source_title }}</div>
+          </div>
+          <div>
+            <div class="actions">
+              {% if copy.is_canonical %}
+                <span class="badge badge-green">Канонічний</span>
+              {% else %}
+                <span class="badge">{{ copy.match_type }}</span>
+              {% endif %}
+              {% if copy.similarity is not none %}
+                <span class="muted">схожість {{ '%.3f'|format(copy.similarity) }}</span>
+              {% endif %}
+              <a class="btn" href="/originals/{{ copy.id }}">Відкрити</a>
+              {% if copy.source_url %}
+                <a class="btn" href="{{ copy.source_url }}" target="_blank" rel="noreferrer">Джерело</a>
+              {% endif %}
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% if dzen_spread %}
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Дзен · поширення сюжету</h2>
+        <span class="badge">{{ dzen_spread|length }} сюжетів</span>
+      </div>
+      <div class="search-list">
+        {% for dz in dzen_spread %}
+        <article class="search-item">
+          <div class="meta">
+            <div>{{ dz.publication_at|localtime }}</div>
+            <div>{{ dz.representative_source or 'Дзен Новости' }}</div>
+          </div>
+          <div>
+            <strong>{{ dz.dzen_title }}</strong>
+            <div class="muted">{{ dz.dzen_source_count }} джерел у Дзен · {{ dz.local_match_count }} збігів у нашій БД · score {{ dz.discovery_score }}</div>
+            <div class="actions">
+              <span class="badge">confidence {{ '%.3f'|format(dz.match_confidence) }}</span>
+              {% if dz.story_url %}<a class="btn" href="{{ dz.story_url }}" target="_blank" rel="noreferrer">Дзен</a>{% endif %}
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+  </section>
+
+  <aside>
+    <section class="panel">
+      <h2>Статус</h2>
+      <dl class="key-values">
+        <div>
+          <dt>Попередня обробка</dt>
+          <dd>
+            {% if item.prefilter_processed %}
+              <span class="badge badge-green">Оброблено</span>
+            {% else %}
+              <span class="badge badge-amber">Не оброблено</span>
+            {% endif %}
+          </dd>
+        </div>
+        <div><dt>Тип джерела</dt><dd>{{ item.source_kind }}</dd></div>
+        <div><dt>Технічний стан тексту</dt><dd>{{ item.content_status }}</dd></div>
+        <div><dt>Публікацій у кластері</dt><dd>{{ item.spread_count or 1 }}</dd></div>
+        <div><dt>Унікальних джерел</dt><dd>{{ item.unique_sources or 1 }}</dd></div>
+        <div><dt>Унікальних доменів</dt><dd>{{ item.unique_domains or 0 }}</dd></div>
+        <div><dt>Telegram-каналів</dt><dd>{{ item.unique_telegram_channels or 0 }}</dd></div>
+        <div><dt>Кросплатформне поширення</dt><dd>{{ 'Так' if item.cross_platform else 'Ні' }}</dd></div>
+        {% if item.analysis_document_id and item.analysis_document_id != item.canonical_document_id %}
+        <div><dt>Текст для аналізу</dt><dd><a href="/originals/{{ item.analysis_document_id }}">матеріал #{{ item.analysis_document_id }}</a></dd></div>
+        {% endif %}
+        {% if item.first_seen_at %}<div><dt>Вперше побачено</dt><dd>{{ item.first_seen_at|localtime }}</dd></div>{% endif %}
+        {% if item.last_seen_at %}<div><dt>Останнє поширення</dt><dd>{{ item.last_seen_at|localtime }}</dd></div>{% endif %}
+      </dl>
+    </section>
+
+    <details class="panel">
+      <summary>Технічні деталі prefilter</summary>
+      <dl class="key-values">
+        <div><dt>Маршрут</dt><dd>{{ item.prefilter_route or '—' }}</dd></div>
+        <div><dt>Domain score</dt><dd>{{ item.domain_score if item.domain_score is not none else '—' }}</dd></div>
+        <div><dt>Influence score</dt><dd>{{ item.influence_score if item.influence_score is not none else '—' }}</dd></div>
+        <div><dt>Spread score</dt><dd>{{ item.spread_score if item.spread_score is not none else '—' }}</dd></div>
+        <div><dt>Актори</dt><dd>{{ item.actor_hits|join(', ') if item.actor_hits else '—' }}</dd></div>
+        <div><dt>Сигнали</dt><dd>{{ item.narrative_hits|join(', ') if item.narrative_hits else '—' }}</dd></div>
+        <div><dt>Хештеги</dt><dd>{{ item.hashtag_hits|join(', ') if item.hashtag_hits else '—' }}</dd></div>
+        <div><dt>Версія правил</dt><dd>{{ item.rules_version or '—' }}</dd></div>
+      </dl>
+    </details>
+
+    <details class="panel">
+      <summary>Метадані джерела</summary>
+      <div class="json">{{ item.metadata|prettyjson }}</div>
+    </details>
+  </aside>
+</div>
+{% endblock %}
+

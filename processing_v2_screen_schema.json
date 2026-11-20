@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "batch_version": {"type": "string"},
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "integer"},
+          "language": {"type": "string"},
+          "summary": {"type": "string"},
+          "briefing": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "relevant": {"type": "boolean"},
+              "score": {"type": "integer", "minimum": 0, "maximum": 100}
+            },
+            "required": ["relevant", "score"]
+          },
+          "influence": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "relevant": {"type": "boolean"},
+              "score": {"type": "integer", "minimum": 0, "maximum": 100}
+            },
+            "required": ["relevant", "score"]
+          },
+          "event": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "relevant": {"type": "boolean"},
+              "score": {"type": "integer", "minimum": 0, "maximum": 100}
+            },
+            "required": ["relevant", "score"]
+          },
+          "entities": {
+            "type": "array",
+            "items": {"type": "string"},
+            "maxItems": 6
+          },
+          "topics": {
+            "type": "array",
+            "items": {"type": "string"},
+            "maxItems": 4
+          },
+          "reason": {"type": "string"},
+          "quality": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+              "needs_review": {"type": "boolean"}
+            },
+            "required": ["confidence", "needs_review"]
+          }
+        },
+        "required": [
+          "id", "language", "summary",
+          "briefing", "influence", "event",
+          "entities", "topics", "reason", "quality"
+        ]
+      }
+    }
+  },
+  "required": ["batch_version", "results"]
+}

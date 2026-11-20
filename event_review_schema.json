@@ -1,0 +1,100 @@
+{
+  "type": "object",
+  "properties": {
+    "action": {
+      "type": "string",
+      "enum": [
+        "new",
+        "merge",
+        "reject",
+        "manual_review"
+      ]
+    },
+    "canonical_key": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "starts_at": {
+      "type": "string"
+    },
+    "ends_at": {
+      "type": "string"
+    },
+    "all_day": {
+      "type": "boolean"
+    },
+    "date_precision": {
+      "type": "string",
+      "enum": [
+        "exact",
+        "day",
+        "month",
+        "range",
+        "approximate",
+        "unknown"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "tentative",
+        "confirmed",
+        "postponed",
+        "cancelled",
+        "completed"
+      ]
+    },
+    "location": {
+      "type": "string"
+    },
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "audiences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "confidence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "reason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "action",
+    "canonical_key",
+    "title",
+    "summary",
+    "starts_at",
+    "ends_at",
+    "all_day",
+    "date_precision",
+    "status",
+    "location",
+    "participants",
+    "audiences",
+    "tags",
+    "confidence",
+    "reason"
+  ],
+  "additionalProperties": false
+}

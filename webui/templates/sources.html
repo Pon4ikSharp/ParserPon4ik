@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block body_class %}dashboard-cyber sources-cyber{% endblock %}
+{% block title %}Джерела{% endblock %}
+{% block heading %}Джерела{% endblock %}
+{% block subheading %}Контроль доступності, надходжень і корисності джерел{% endblock %}
+{% block content %}
+<div class="sources-v2">
+  <section class="source-kpis">
+    <a class="source-kpi" href="/sources">
+      <span>Усього джерел</span><strong>{{ summary.total }}</strong><small>зареєстровано в системі</small>
+    </a>
+    <a class="source-kpi source-kpi-good" href="/sources?status=healthy">
+      <span>Працюють</span><strong>{{ summary.healthy }}</strong><small>є надходження за 24 години</small>
+    </a>
+    <a class="source-kpi source-kpi-warn" href="/sources?status=quiet">
+      <span>Тихі</span><strong>{{ summary.quiet }}</strong><small>нічого за 24г, але були за 7д</small>
+    </a>
+    <a class="source-kpi source-kpi-bad" href="/sources?status=problem">
+      <span>Без даних 7 днів</span><strong>{{ summary.problem }}</strong><small>потребують перевірки</small>
+    </a>
+    <a class="source-kpi source-kpi-bad" href="/sources?status=never">
+      <span>Ніколи не давали даних</span><strong>{{ summary.never }}</strong><small>підключення треба перевірити</small>
+    </a>
+    <a class="source-kpi" href="/sources">
+      <span>Помилки endpoint</span><strong>{{ summary.endpoint_errors }}</strong><small>за останньою ручною перевіркою</small>
+    </a>
+  </section>
+  <section class="panel source-toolbar">
+    <div>
+      <strong>Керування джерелами</strong>
+      <span class="muted">Один рядок = одне джерело; RSS/Telegram-точки відкриваються всередині.</span>
+    </div>
+    <div class="actions source-toolbar-actions">
+      <button class="btn" type="button" data-source-check-all>Перевірити всі</button>
+      <details class="source-add">
+        <summary class="btn btn-primary">+ Додати джерело</summary>
+        <div class="source-add-popover">
+          <form id="source-create-form" class="form-grid">
+            <div class="field wide"><label>RSS, сайт або Telegram-канал</label><input name="address" required placeholder="https://site.ua/rss або @telegram_channel"></div>
+            <div class="field"><label>Назва</label><input name="title" placeholder="Можна залишити порожнім"></div>
+            <div class="field"><label>Цільова аудиторія</label><input name="audiences" placeholder="Наприклад: Молдова, Румунія"></div>
+            <label class="check-row"><input type="checkbox" name="for_info" checked> Використовувати для інфовпливу</label>
+            <label class="check-row source-hidden-option"><input type="checkbox" name="for_br" checked> Сумісність БР</label>
+            <div class="wide actions"><button type="button" class="btn" data-source-verify>Перевірити</button><button type="submit" class="btn btn-primary" data-source-save disabled>Додати</button></div>
+            <div class="wide source-check-result" data-source-result>Спочатку перевірте адресу — система знайде RSS/Atom або перевірить Telegram.</div>
+          </form>
+        </div>
+      </details>
+    </div>
+    <div class="source-check-progress" data-source-check-all-progress></div>
+  </section>
+  {% if dzen_candidates %}
+  <section class="panel dzen-source-panel">
+    <div class="panel-head">
+      <div>
+        <h2>Дзен · кандидати джерел <span class="count-pill">{{ dzen_summary.unregistered }}</span></h2>
+        <div class="muted">Активних у Дзен за 24г: {{ dzen_summary.active24 }} · уже зіставлено з реєстром: {{ dzen_summary.registered }}. Нічого не додається автоматично.</div>
+      </div>
+    </div>
+    <div class="table-wrap source-table-wrap">
+      <table class="source-table">
+        <thead><tr><th>Джерело</th><th>Дзен · 24г</th><th>Домен</th><th>Останнє</th></tr></thead>
+        <tbody>
+        {% for row in dzen_candidates %}
+          <tr>
+            <td class="source-main-cell"><strong>{{ row.source_name }}</strong>{% if row.sample_article_url %}<div><a href="{{ row.sample_article_url }}" target="_blank" rel="noreferrer">приклад публікації ↗</a></div>{% endif %}</td>
+            <td><strong>{{ row.relevant_stories_24h }}</strong> релев. сюжетів · {{ row.stories_24h }} сюжетів · {{ row.publications_24h }} публікацій</td>
+            <td class="mono">{% if row.sample_domain=='dzen.ru' %}Dzen-hosted{% else %}{{ row.sample_domain or '—' }}{% endif %}</td>
+            <td class="nowrap">{{ row.last_seen_at|localtime }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+  <section class="panel source-filter-panel">
+    <form class="source-filters" method="get">
+      <div class="field source-filter-search"><label>Назва або адреса</label><input name="q" value="{{ filters.q }}" placeholder="ТАСС, t.me/..., rss..."></div>
+      <div class="field"><label>Стан</label><select name="status">
+        <option value="all">Усі стани</option>
+        <option value="healthy" {% if filters.status=='healthy' %}selected{% endif %}>Працює</option>
+        <option value="quiet" {% if filters.status=='quiet' %}selected{% endif %}>Тихе &gt;24г</option>
+        <option value="problem" {% if filters.status=='problem' %}selected{% endif %}>Без даних 7д</option>
+        <option value="never" {% if filters.status=='never' %}selected{% endif %}>Ніколи не було даних</option>
+        <option value="disabled" {% if filters.status=='disabled' %}selected{% endif %}>Вимкнене</option>
+      </select></div>
+      <div class="field"><label>Тип</label><select name="kind">
+        <option value="all">Усі</option>
+        <option value="telegram" {% if filters.kind=='telegram' %}selected{% endif %}>Telegram</option>
+        <option value="rss" {% if filters.kind=='rss' %}selected{% endif %}>RSS/Atom</option>
+        <option value="web" {% if filters.kind=='web' %}selected{% endif %}>Web</option>
+      </select></div>
+      <div class="field"><label>Підключення</label><select name="enabled">
+        <option value="all">Усі</option>
+        <option value="yes" {% if filters.enabled=='yes' %}selected{% endif %}>Увімкнені</option>
+        <option value="no" {% if filters.enabled=='no' %}selected{% endif %}>Вимкнені</option>
+      </select></div>
+      <button class="btn btn-primary">Застосувати</button>
+      <a class="btn" href="/sources">Скинути</a>
+    </form>
+  </section>
+  <section class="panel source-list-panel">
+    <div class="panel-head">
+      <h2>Джерела <span class="count-pill">{{ rows|length }}</span></h2>
+      <span class="muted source-legend">Статус визначається за фактичними надходженнями в БД, а не лише HTTP-відповіддю.</span>
+    </div>
+    <div class="table-wrap source-table-wrap">
+      <table class="source-table">
+        <thead><tr>
+          <th>Джерело</th><th>Стан</th><th>Надходження</th><th>Prefilter · 24г</th><th>ЦА</th><th>Endpoint</th><th>Керування</th>
+        </tr></thead>
+        <tbody>
+        {% for row in rows %}
+          <tr class="source-row source-row-{{ row.health_state }}">
+            <td class="source-main-cell">
+              <a class="source-name" href="/sources/{{ row.id }}">{{ row.title }}</a>
+              <div class="source-url">{{ row.url or '—' }}</div>
+            </td>
+            <td>
+              <span class="badge {% if row.health_badge %}badge-{{ row.health_badge }}{% endif %}">{{ row.health_label }}</span>
+              {% if row.bad_count %}<div class="source-warning">{{ row.bad_count }} endpoint з помилкою</div>{% endif %}
+              {% if row.missing_count %}<div class="source-warning">можливий пропуск: {{ row.missing_count }}</div>{% endif %}
+            </td>
+            <td class="source-activity">
+              <strong>{{ row.docs24 }}</strong> / 24г · <strong>{{ row.docs7 }}</strong> / 7д
+              <small>останнє: {{ row.last_database_at|localtime }}</small>
+            </td>
+            <td>
+              <div class="source-routes">
+                <span class="route-chip route-chip-must_analyze">M {{ row.must24 }}</span>
+                <span class="route-chip route-chip-analyze">A {{ row.analyze24 }}</span>
+                <span class="route-chip route-chip-hold">H {{ row.hold24 }}</span>
+                <span class="route-chip route-chip-drop_soft">D {{ row.drop24 }}</span>
+              </div>
+            </td>
+            <td><div class="source-audiences">{% for audience in row.audiences %}<span>{{ audience }}</span>{% else %}<small>не задано</small>{% endfor %}</div></td>
+            <td class="source-endpoint-cell">
+              <span class="type-chip">{{ row.endpoint_kind }}</span>
+              <strong>{{ row.endpoint_count }}</strong> точ.
+              <small title="{{ row.primary_endpoint or '' }}">{{ row.primary_endpoint or '—' }}</small>
+            </td>
+            <td>
+              <div class="source-actions">
+                <a class="btn btn-small" href="/sources/{{ row.id }}">Відкрити</a>
+                {% if row.primary_endpoint %}<button class="btn btn-small" data-source-check="{{ row.primary_endpoint }}">Перевірити</button>{% endif %}
+              </div>
+              <div class="source-switches">
+                <label title="Збір увімкнено"><span>Збір</span><span class="switch"><input type="checkbox" data-source-toggle="enabled" data-source-id="{{ row.id }}" {% if row.enabled %}checked{% endif %}><span class="slider"></span></span></label>
+                <label title="Використовувати для інфовпливу"><span>Інфо</span><span class="switch"><input type="checkbox" data-source-toggle="for_info" data-source-id="{{ row.id }}" {% if row.for_info %}checked{% endif %}><span class="slider"></span></span></label>
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="7" class="empty">Джерел за цими фільтрами не знайдено</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

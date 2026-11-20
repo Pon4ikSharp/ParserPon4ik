@@ -1,0 +1,123 @@
+{
+  "type": "object",
+  "properties": {
+    "threats": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "Дискредитація України та західних країн-партнерів",
+          "Делегітимізація української влади",
+          "Легітимізація окупації росією українських територій",
+          "Виправдання збройної агресії РФ проти України",
+          "Дестабілізація соціально-політичної ситуації в Україні",
+          "Героїзація військових “успіхів” ЗС РФ",
+          "Дискредитація Сил оборони України та військового командування",
+          "Загострення відносин України з державами-партнерами",
+          "Дискредитація обороноздатності України",
+          "Формування образу України як джерела тероризму та екстремізму"
+        ]
+      }
+    },
+    "directions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "audiences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "audience": {
+            "type": "string",
+            "enum": [
+              "Росія",
+              "Україна",
+              "ТОТ України",
+              "Країни Заходу",
+              "Білорусь",
+              "Туреччина",
+              "Молдова",
+              "Словаччина",
+              "Угорщина",
+              "Польща",
+              "Румунія",
+              "Зовнішня аудиторія",
+              "Міжнародна аудиторія",
+              "Невизначена аудиторія"
+            ]
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "source_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "required": [
+                "text",
+                "source_ids"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "audience",
+          "messages"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "forecast": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "event": {
+            "type": "string"
+          },
+          "source_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "date",
+          "event",
+          "source_ids"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "threats",
+    "directions",
+    "audiences",
+    "forecast",
+    "events"
+  ],
+  "additionalProperties": false
+}

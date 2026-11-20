@@ -1,0 +1,101 @@
+{
+  "type": "object",
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "audience": {
+            "type": "string",
+            "enum": [
+              "Росія",
+              "Україна",
+              "ТОТ України",
+              "Країни Заходу",
+              "Білорусь",
+              "Туреччина",
+              "Молдова",
+              "Словаччина",
+              "Угорщина",
+              "Польща",
+              "Румунія",
+              "Зовнішня аудиторія",
+              "Міжнародна аудиторія",
+              "Невизначена аудиторія"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "direction": {
+            "type": "string"
+          },
+          "threats": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Дискредитація України та західних країн-партнерів",
+                "Делегітимізація української влади",
+                "Легітимізація окупації росією українських територій",
+                "Виправдання збройної агресії РФ проти України",
+                "Дестабілізація соціально-політичної ситуації в Україні",
+                "Героїзація військових “успіхів” ЗС РФ",
+                "Дискредитація Сил оборони України та військового командування",
+                "Загострення відносин України з державами-партнерами",
+                "Дискредитація обороноздатності України",
+                "Формування образу України як джерела тероризму та екстремізму"
+              ]
+            }
+          },
+          "source_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "audience",
+          "message",
+          "direction",
+          "threats",
+          "source_ids"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "event": {
+            "type": "string"
+          },
+          "source_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "date",
+          "event",
+          "source_ids"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "items",
+    "events"
+  ],
+  "additionalProperties": false
+}

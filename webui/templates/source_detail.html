@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block body_class %}dashboard-cyber sources-cyber{% endblock %}
+{% block title %}{{ item.title }}{% endblock %}
+{% block heading %}{{ item.title }}{% endblock %}
+{% block subheading %}Діагностика джерела, endpoint-и та останні надходження{% endblock %}
+{% block content %}
+<div class="source-detail-v2">
+  <div class="source-detail-topline">
+    <a href="/sources">← До всіх джерел</a>
+    <div class="source-switches source-detail-switches">
+      <label><span>Збір</span><span class="switch"><input type="checkbox" data-source-toggle="enabled" data-source-id="{{ item.id }}" {% if item.enabled %}checked{% endif %}><span class="slider"></span></span></label>
+      <label><span>Інфовплив</span><span class="switch"><input type="checkbox" data-source-toggle="for_info" data-source-id="{{ item.id }}" {% if item.for_info %}checked{% endif %}><span class="slider"></span></span></label>
+    </div>
+  </div>
+
+  <section class="grid metrics source-detail-metrics">
+    <div class="metric"><span>Матеріалів · 24г</span><strong>{{ stats.docs24 }}</strong><small>фактично отримано</small></div>
+    <div class="metric"><span>Матеріалів · 7д</span><strong>{{ stats.docs7 }}</strong><small>стабільність потоку</small></div>
+    <div class="metric"><span>MUST + ANALYZE · 7д</span><strong>{{ stats.must7 + stats.analyze7 }}</strong><small>M {{ stats.must7 }} · A {{ stats.analyze7 }}</small></div>
+    <div class="metric"><span>Останнє надходження</span><strong class="metric-time">{{ stats.last_database_at|localtime }}</strong><small>час запису в БД</small></div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Профіль джерела</h2><span class="type-chip">{{ item.kind }}</span></div>
+    <dl class="source-profile-grid">
+      <div><dt>URL</dt><dd><a href="{{ item.url }}" target="_blank" rel="noreferrer">{{ item.url or '—' }}</a></dd></div>
+      <div><dt>Source ID</dt><dd class="mono">{{ item.id }} · {{ item.source_key }}</dd></div>
+      <div><dt>Цільові аудиторії</dt><dd>{% for audience in item.audiences %}<span class="source-audience-chip">{{ audience }}</span>{% else %}не задано{% endfor %}</dd></div>
+      <div><dt>Маршрути за 7 днів</dt><dd>
+        <span class="route-chip route-chip-must_analyze">M {{ stats.must7 }}</span>
+        <span class="route-chip route-chip-analyze">A {{ stats.analyze7 }}</span>
+        <span class="route-chip route-chip-hold">H {{ stats.hold7 }}</span>
+        <span class="route-chip route-chip-drop_soft">D {{ stats.drop7 }}</span>
+      </dd></div>
+    </dl>
+  </section>
+
+  {% if telegram_markers %}
+  <section class="panel">
+    <div class="panel-head"><h2>Telegram · хештеги та ярлики · 7 днів</h2><span class="muted">повний marker-layer, незалежно від маршруту prefilter</span></div>
+    <div class="source-audiences">
+      {% for marker in telegram_markers %}
+        <span title="{{ marker.marker_type }} · {{ marker.documents }} документів">{% if marker.marker_type=='hashtag' %}{{ marker.marker }}{% else %}ярлик: {{ marker.marker }}{% endif %} · {{ marker.uses }}</span>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="panel">
+    <div class="panel-head">
+      <div><h2>Точки збору</h2><div class="muted">Кожен RSS/Telegram endpoint перевіряється окремо. Масова перевірка запускається зі списку джерел.</div></div>
+    </div>
+    <div class="source-endpoint-list">
+      {% for endpoint in endpoints %}
+      <article class="source-endpoint-card {% if endpoint.checked_at and not endpoint.check_ok %}endpoint-bad{% endif %}" data-source-endpoint-card>
+        <div class="source-endpoint-head">
+          <div>
+            <span class="type-chip">{{ endpoint.kind }}</span>
+            {% if endpoint.check_ok %}<span class="badge badge-green">доступне</span>
+            {% elif endpoint.checked_at %}<span class="badge badge-red">помилка</span>
+            {% else %}<span class="badge">не перевірено</span>{% endif %}
+          </div>
+          <button class="btn btn-small" data-source-check="{{ endpoint.endpoint }}">Перевірити зараз</button>
+        </div>
+        <div class="source-endpoint-address mono">{{ endpoint.endpoint }}</div>
+        <div class="source-endpoint-meta">
+          <span>Перевірено: <strong>{{ endpoint.checked_at|localtime }}</strong></span>
+          <span>Останній remote item: <strong>{{ endpoint.remote_item_at|localtime }}</strong></span>
+          <span>Можливий пропуск: <strong>{{ endpoint.missing_count or 0 }}</strong></span>
+        </div>
+        {% if endpoint.health_error %}<div class="source-endpoint-error">{{ endpoint.health_error }}</div>{% endif %}
+        <details class="source-repair">
+          <summary>Змінити адресу / знайти новий RSS</summary>
+          <form data-source-endpoint-form data-source-id="{{ item.id }}" class="source-repair-form">
+            <input type="hidden" name="old_endpoint" value="{{ endpoint.endpoint }}">
+            <div class="field"><label>Нова адреса сайту, RSS або Telegram</label><input name="address" required value="{{ endpoint.endpoint }}"></div>
+            <button class="btn btn-primary btn-small" type="submit">Перевірити й замінити</button>
+          </form>
+          <p class="muted">Спочатку нова адреса буде перевірена. Історія матеріалів source_id={{ item.id }} збережеться.</p>
+        </details>
+      </article>
+      {% else %}<div class="empty">У джерела немає endpoint-ів</div>{% endfor %}
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Останні матеріали</h2><a href="/originals?source={{ item.title|urlencode }}">Відкрити в «Оригіналах»</a></div>
+    <div class="table-wrap">
+      <table class="source-recent-table">
+        <thead><tr><th>Час</th><th>Матеріал</th><th>Маршрут</th><th>Оцінки</th></tr></thead>
+        <tbody>
+        {% for row in recent %}
+          <tr>
+            <td class="nowrap">{{ row.created_at|localtime }}</td>
+            <td><a href="/originals/{{ row.id }}">{{ (row.feed_text or 'Матеріал #' ~ row.id)[:240] }}</a></td>
+            <td>{% if row.route %}<span class="route-chip route-chip-{{ row.route|lower }}">{{ row.route }}</span>{% else %}<span class="muted">ще не оброблено</span>{% endif %}</td>
+            <td class="nowrap"><span class="muted">D</span> {{ row.domain_score or 0 }} · <span class="muted">I</span> {{ row.influence_score or 0 }}</td>
+          </tr>
+        {% else %}<tr><td colspan="4" class="empty">Матеріалів ще немає</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

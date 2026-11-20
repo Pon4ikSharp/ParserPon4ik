@@ -1,0 +1,91 @@
+{
+  "type": "object",
+  "properties": {
+    "relevant": {
+      "type": "boolean"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Безпосередньо зачіпає національні інтереси України",
+        "Зовнішньополітична сфера",
+        "Воєнна сфера",
+        "Військово-технічна сфера (ВТС)",
+        "Економічна сфера",
+        "Інформаційна сфера",
+        "Сфера кібербезпеки",
+        "Обстановка на ТОТ України",
+        "Кризові регіони",
+        "Не визначено"
+      ]
+    },
+    "paragraph": {
+      "type": "string"
+    },
+    "reference_text": {
+      "type": "string"
+    },
+    "event_key": {
+      "type": "string"
+    },
+    "facts_key": {
+      "type": "string"
+    },
+    "article_key": {
+      "type": "string"
+    },
+    "primary_sources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "person_names": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "full_name": {
+            "type": "string"
+          },
+          "short_name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "full_name",
+          "short_name"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "reason": {
+      "type": "string"
+    },
+    "event_detected": {
+      "type": "boolean"
+    },
+    "event_text": {
+      "type": "string"
+    },
+    "detected_event_key": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "relevant",
+    "category",
+    "paragraph",
+    "reference_text",
+    "event_key",
+    "facts_key",
+    "article_key",
+    "primary_sources",
+    "person_names",
+    "reason",
+    "event_detected",
+    "event_text",
+    "detected_event_key"
+  ],
+  "additionalProperties": false
+}

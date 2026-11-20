@@ -1,0 +1,256 @@
+{
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "event": {
+            "type": "string"
+          },
+          "influence_link": {
+            "type": "string"
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "date",
+          "event",
+          "influence_link",
+          "evidence_refs"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "heading": {
+            "type": "string",
+            "enum": [
+              "виправдання збройної агресії проти України.",
+              "перешкоджання зовнішній військовій та фінансовій підтримці України.",
+              "дестабілізація соціально-політичної обстановки в нашій державі.",
+              "дискредитація Сил оборони України."
+            ]
+          },
+          "paragraphs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "italic": {
+                  "type": "boolean"
+                },
+                "italic_spans": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "evidence_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "text",
+                "italic",
+                "italic_spans",
+                "evidence_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "subsections": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "heading": {
+                  "type": "string"
+                },
+                "paragraphs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "text": {
+                        "type": "string"
+                      },
+                      "italic": {
+                        "type": "boolean"
+                      },
+                      "italic_spans": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "evidence_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "text",
+                      "italic",
+                      "italic_spans",
+                      "evidence_refs"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "heading",
+                "paragraphs"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "heading",
+          "paragraphs",
+          "subsections"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "special_sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "heading": {
+            "type": "string"
+          },
+          "paragraphs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "italic": {
+                  "type": "boolean"
+                },
+                "italic_spans": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "evidence_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "text",
+                "italic",
+                "italic_spans",
+                "evidence_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "subsections": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "heading": {
+                  "type": "string"
+                },
+                "paragraphs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "text": {
+                        "type": "string"
+                      },
+                      "italic": {
+                        "type": "boolean"
+                      },
+                      "italic_spans": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "evidence_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "text",
+                      "italic",
+                      "italic_spans",
+                      "evidence_refs"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "heading",
+                "paragraphs"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "heading",
+          "paragraphs",
+          "subsections"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "quality_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "title",
+    "events",
+    "sections",
+    "special_sections",
+    "quality_notes"
+  ],
+  "additionalProperties": false
+}

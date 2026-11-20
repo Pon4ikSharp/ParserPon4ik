@@ -1,0 +1,109 @@
+{
+  "type": "object",
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "narrative_key": {
+            "type": "string"
+          },
+          "objective": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "audiences": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "information_triggers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evidence_examples": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "source_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "text",
+                "source_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "source_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "importance": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          }
+        },
+        "required": [
+          "narrative_key",
+          "objective",
+          "summary",
+          "audiences",
+          "information_triggers",
+          "evidence_examples",
+          "source_refs",
+          "importance"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "event": {
+            "type": "string"
+          },
+          "source_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "date",
+          "event",
+          "source_refs"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "items",
+    "events"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}Оригінали{% endblock %}
+{% block body_class %}originals-cyber{% endblock %}
+{% block heading %}Оригінали{% endblock %}
+{% block subheading %}Відбір матеріалів, фільтрація та формування пакетів для подальшої аналітики{% endblock %}
+{% block content %}
+<div class="originals-v3">
+
+  <section class="orig-filter-panel">
+    <form id="originals-filter-form" class="orig-filter-form" method="get">
+      <div class="orig-filter-top">
+        <label class="orig-search">
+          <span>⌕</span>
+          <input name="q" value="{{ filters.q }}" placeholder="Пошук у матеріалах або #тег">
+        </label>
+        <label class="orig-input-group">
+          <span>Від</span>
+          <input type="date" name="date_from" value="{{ filters.date_from }}">
+        </label>
+        <label class="orig-input-group">
+          <span>До</span>
+          <input type="date" name="date_to" value="{{ filters.date_to }}">
+        </label>
+        <label class="orig-input-group source-filter">
+          <span>Джерело</span>
+          <input name="source" value="{{ filters.source }}" placeholder="Назва джерела">
+        </label>
+        <label class="orig-input-group">
+          <span>Обробка</span>
+          <select name="processing_status">
+            <option value="all" {% if filters.processing_status=='all' %}selected{% endif %}>Усі</option>
+            <option value="grok_processed" {% if filters.processing_status=='grok_processed' %}selected{% endif %}>Grok: оброблено</option>
+            <option value="grok_unprocessed" {% if filters.processing_status=='grok_unprocessed' %}selected{% endif %}>Grok: не оброблено</option>
+            <option value="prefilter_processed" {% if filters.processing_status=='prefilter_processed' %}selected{% endif %}>Первинно оброблено</option>
+            <option value="prefilter_unprocessed" {% if filters.processing_status=='prefilter_unprocessed' %}selected{% endif %}>Первинно не оброблено</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="orig-filter-groups">
+        <div class="orig-filter-group">
+          <div class="orig-filter-label">Маршрут</div>
+          <div class="orig-chip-list">
+            {% for route in route_options %}
+            <label class="orig-check-chip route-{{ route|lower }}">
+              <input type="checkbox" name="routes" value="{{ route }}" {% if route in filters.routes %}checked{% endif %}>
+              <span>{{ route_labels[route] }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="orig-filter-group audience-group">
+          <div class="orig-filter-label">Цільова аудиторія</div>
+          <div class="orig-chip-list">
+            {% for audience in audience_options %}
+            <label class="orig-check-chip audience-chip">
+              <input type="checkbox" name="audiences" value="{{ audience }}" {% if audience in filters.audiences %}checked{% endif %}>
+              <span>{{ audience }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="orig-filter-bottom">
+        <label class="orig-switch">
+          <input type="checkbox" name="canonical_only" value="true" {% if filters.canonical_only %}checked{% endif %}>
+          <span class="orig-switch-ui"></span>
+          <span>Лише оригінали сюжетів</span>
+        </label>
+
+        <div class="orig-presets">
+          <span>Швидкий відбір:</span>
+          <button type="button" data-original-preset="weekly-grok">Для тижневої · Grok</button>
+          <button type="button" data-original-preset="important-24h">Важливе · 24 год</button>
+        </div>
+
+        <div class="orig-filter-actions">
+          <a class="orig-btn ghost" href="/originals">Скинути</a>
+          <button class="orig-btn primary" type="submit">Застосувати</button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="orig-results-panel">
+    <header class="orig-results-head">
+      <div>
+        <span class="orig-eyebrow">РЕЗУЛЬТАТ ВІДБОРУ</span>
+        <h2>Матеріали <span>{{ "{:,}".format(total).replace(",", " ") }}</span></h2>
+      </div>
+      <div class="orig-results-meta">
+        {% if filters.routes %}<span>{{ filters.routes|length }} маршрутів</span>{% endif %}
+        {% if filters.audiences %}<span>{{ filters.audiences|length }} ЦА</span>{% endif %}
+        {% if filters.canonical_only %}<span>без повторів сюжетів</span>{% endif %}
+      </div>
+    </header>
+
+    <div class="orig-export-bar">
+      <div class="orig-selection-state">
+        <span class="selection-icon">✓</span>
+        <div>
+          <strong><span data-original-selected-count>0</span> вибрано</strong>
+          <small>Вибір зберігається при переході між сторінками</small>
+        </div>
+      </div>
+
+      <div class="orig-export-controls">
+        <label>
+          <span>Формат</span>
+          <select data-original-export-format>
+            <option value="markdown">Текст для ШІ (.md)</option>
+            <option value="json">JSON</option>
+            <option value="csv">CSV</option>
+          </select>
+        </label>
+        <button class="orig-btn export" type="button" data-original-export="selected">Вивантажити вибране</button>
+        <button class="orig-btn secondary" type="button" data-original-export="filtered">Вивантажити весь результат</button>
+        <button class="orig-btn primary" type="button" data-original-export="weekly">Вивантажити тижневу</button>
+        <button class="orig-btn ghost compact" type="button" data-original-clear-selection>Очистити вибір</button>
+      </div>
+    </div>
+
+    <div class="orig-export-note">
+      Для тижневої натисніть «Для тижневої · Grok»: будуть лише Grok-оброблені MUST_ANALYZE + ANALYZE, без HOLD, дублікатів і відсіву.
+    </div>
+
+    <div class="orig-table-wrap">
+      <table class="orig-table">
+        <thead>
+          <tr>
+            <th class="select-col">
+              <label class="orig-table-check" title="Вибрати всі на цій сторінці">
+                <input type="checkbox" data-original-select-page>
+                <span></span>
+              </label>
+            </th>
+            <th>Джерело</th>
+            <th>Матеріал</th>
+            <th>ЦА</th>
+            <th>Час</th>
+            <th>Стан</th>
+            <th>Маршрут</th>
+            <th>Поширення</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr data-original-row="{{ row.id }}">
+            <td class="select-col">
+              <label class="orig-table-check">
+                <input type="checkbox" value="{{ row.id }}" data-original-select>
+                <span></span>
+              </label>
+            </td>
+            <td>
+              <div class="orig-source-cell">
+                <span class="orig-source-kind {{ row.source_kind }}">{{ 'T' if row.source_kind=='telegram' else 'R' }}</span>
+                <div>
+                  <strong title="{{ row.source_title or 'Без назви' }}">{{ row.source_title or 'Без назви' }}</strong>
+                  <small>{{ 'Telegram' if row.source_kind=='telegram' else 'Сайт / RSS' }}</small>
+                </div>
+              </div>
+            </td>
+            <td class="orig-material-cell">
+              <a href="/originals/{{ row.id }}">{{ row.preview or 'Без тексту' }}</a>
+              <small>#{{ row.id }}</small>
+            </td>
+            <td>
+              <div class="orig-audience-list">
+                {% for audience in row.audiences or [] %}
+                <span>{{ audience }}</span>
+                {% else %}
+                <span class="empty-audience">—</span>
+                {% endfor %}
+              </div>
+            </td>
+            <td class="orig-time">{{ (row.published_at or row.created_at)|localtime }}</td>
+            <td>
+              {% if row.prefilter_processed %}
+              <span class="orig-state done">Prefilter ✓</span>
+              {% else %}
+              <span class="orig-state pending">Prefilter —</span>
+              {% endif %}
+              {% if row.grok_decision %}
+              <span class="orig-state done">Grok {{ row.grok_decision }}</span>
+              {% else %}
+              <span class="orig-state pending">Grok —</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if row.prefilter_route %}
+              <span class="orig-route route-{{ row.prefilter_route|lower }}">{{ route_labels.get(row.prefilter_route,row.prefilter_route) }}</span>
+              {% else %}
+              <span class="orig-muted">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if row.unique_sources and row.unique_sources > 1 %}
+              <a class="orig-spread" href="/originals/{{ row.id }}">
+                <b>{{ row.unique_sources }}</b> джерел
+                <small>{{ row.spread_count }} повторів{% if row.unique_telegram_channels %} · {{ row.unique_telegram_channels }} Telegram{% endif %}</small>
+              </a>
+              {% elif row.spread_count and row.spread_count > 1 %}
+              <span class="orig-spread muted"><b>{{ row.spread_count }}</b> повторів</span>
+              {% else %}
+              <span class="orig-muted">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8"><div class="orig-empty">За цими фільтрами матеріалів не знайдено.</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="orig-pager">
+      {% if page_no > 1 %}
+      <a class="orig-btn ghost" href="/originals?{{ pager_query }}&page={{ page_no-1 }}">← Назад</a>
+      {% else %}<span></span>{% endif %}
+
+      <div>
+        <strong>{{ (page_no-1)*page_size+1 if total else 0 }}–{{ [page_no*page_size,total]|min }}</strong>
+        <span>із {{ "{:,}".format(total).replace(",", " ") }}</span>
+      </div>
+
+      {% if page_no*page_size < total %}
+      <a class="orig-btn ghost" href="/originals?{{ pager_query }}&page={{ page_no+1 }}">Далі →</a>
+      {% else %}<span></span>{% endif %}
+    </div>
+  </section>
+</div>
+{% endblock %}

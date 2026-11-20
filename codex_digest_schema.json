@@ -1,0 +1,70 @@
+{
+  "type": "object",
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "Безпосередньо зачіпає національні інтереси України",
+              "Зовнішньополітична сфера",
+              "Воєнна сфера",
+              "Військово-технічна сфера (ВТС)",
+              "Економічна сфера",
+              "Інформаційна сфера",
+              "Сфера кібербезпеки",
+              "Обстановка на ТОТ України",
+              "Кризові регіони"
+            ]
+          },
+          "paragraph": {
+            "type": "string"
+          },
+          "reference_text": {
+            "type": "string"
+          },
+          "source_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "person_names": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "full_name": {
+                  "type": "string"
+                },
+                "short_name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "full_name",
+                "short_name"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "category",
+          "paragraph",
+          "reference_text",
+          "source_ids",
+          "person_names"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "items"
+  ],
+  "additionalProperties": false
+}
